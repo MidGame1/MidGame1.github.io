@@ -10,12 +10,19 @@
     <!--Add buttons to initiate auth sequence and sign out-->
     <button id="authorize_button" style="display: none;">Authorize</button>
     <button id="signout_button" style="display: none;">Sign Out</button>
-
+    
+    <div>
+      <br><br>
+      <label for="device_id">Device Id:</label>
+      <input type="text" id="device_id" name="device_id"/><br><br>
+      <button id="get_data_button" style="display: block;">Get Data</button>
+    </div>
+    
     <pre id="content" style="white-space: pre-wrap;"></pre>
 
     <script type="text/javascript">
       // Client ID and API key from the Developer Console
-      var CLIENT_ID = '932420715564-6cv88djdgl0ullpuk26v06e60d16g58r.apps.googleusercontent.com';
+      var CLIENT_ID = '836511754688-3ln8v9gikdajcevtlplrvusd4f8rgojf.apps.googleusercontent.com';
       var API_KEY = 'AIzaSyDXTTIK43E2CK_TCMG2CW0gMqNI5Wi9BaY';
 
       // Array of API discovery doc URLs for APIs used by the quickstart
@@ -27,7 +34,8 @@
 
       var authorizeButton = document.getElementById('authorize_button');
       var signoutButton = document.getElementById('signout_button');
-
+      var getDataButton = document.getElementById('get_data_button');
+      var devId = document.getElementById('device_id');
       /**
        *  On load, called to load the auth2 library and API client library.
        */
@@ -53,6 +61,7 @@
           updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
           authorizeButton.onclick = handleAuthClick;
           signoutButton.onclick = handleSignoutClick;
+          getDataButton.onclick = getDataClick;
         }, function(error) {
           appendPre(JSON.stringify(error, null, 2));
         });
@@ -66,7 +75,7 @@
         if (isSignedIn) {
           authorizeButton.style.display = 'none';
           signoutButton.style.display = 'block';
-          listMajors();
+          //listMajors();
         } else {
           authorizeButton.style.display = 'block';
           signoutButton.style.display = 'none';
@@ -103,18 +112,35 @@
        * Print the names and majors of students in a sample spreadsheet:
        * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
        */
-      function listMajors() {
+      function displayData(deviceId) {//listMajors() {
         gapi.client.sheets.spreadsheets.values.get({
           spreadsheetId: '1n4ctXvS9VYI_EXanxssVZGhcJiIDX0HC2JgFtHrDAyM',
-          range: 'Sheet1!C38:D1055',
+          range: 'Sheet1!A1:E1055',
         }).then(function(response) {
           var range = response.result;
           if (range.values.length > 0) {
-            appendPre('Celcius, Fahrenheit:');
-            for (i = 0; i < range.values.length; i++) {
-              var row = range.values[i];
-              // Print columns A and E, which correspond to indices 0 and 4.
-              appendPre(row[0] + ', ' + row[1]);
+          
+            var indices = filterIndices(range.values, 'Meat Boiz', deviceId); //todo add probe ID into this as well?
+            
+            if (0 != indices.length) {
+              appendPre('Time\t  Probe\t  Temperature\t');
+              for (i = 0; i < indices.length; i++) {
+                var row = range.values[indices[i]];
+                
+                if( ( !isNaN(parseInt(row[4])+1) ) && ( row[3] == deviceId ) ) {
+                  var splits = row[0].split(" ");
+                  var time = splits[splits.length-1];
+                  
+                  splits = row[2].split(",");
+                  // Print columns A and E, which correspond to indices 0 and 4.
+                  for (j = 0; j < splits.length; j++) {
+                    appendPre(time + '\t    ' + (parseInt(row[4])+1) + '\t    ' + splits[j] + '\u00B0F');
+                  }
+                }
+              }
+            }
+            else {
+              appendPre('No data with that Device ID found.');
             }
           } else {
             appendPre('No data found.');
@@ -123,6 +149,58 @@
           appendPre('Error: ' + response.result.error.message);
         });
       }
+      
+      function getDataClick() {
+        clearData();
+        if(isNaN(parseInt(devId.value)))
+          appendPre('No Device ID provided');
+        else
+          displayData(devId.value);
+      }
+
+      function clearData() {
+        var pre = document.getElementById('content');
+        while(pre.firstChild) {
+          pre.removeChild(pre.firstChild);
+        }
+      }
+      
+      function filterIndices(values, resetWord, deviceId) {
+        var deviceIds = values.map(x => x[3]);
+        var dataFields = values.map(x => x[2]);
+        
+        var indices = findIndices(deviceIds, deviceId); // finds the indices with the correct deviceId
+        if (0 == indices.length)
+          return indices;
+        
+        dataFields = dataFields.filter( function(value, index) { // formats dataFields to be only combrised of data with the correct deviceId
+              return indices.indexOf(index) != -1;
+        });
+        
+        var index = dataFields.indexOf(resetWord);
+        var savedIndex = indices[0];
+        if (-1 == index) {
+          return indices; //reset not found
+        }
+        while(index != -1) {
+          savedIndex = index;
+          index = dataFields.indexOf(resetWord, index+1);
+        }
+        return indices.splice(savedIndex+1, indices.length - savedIndex-1); // found an index to reset at. Only data after this point
+      }
+      
+      function findIndices(values, match) {
+        var indices = [];
+        var index = values.indexOf(match);
+        while(index != -1) {
+          indices.push(index);
+          index = values.indexOf(match, index+1);
+        }
+        return indices; // found an index to reset at. Only data after this point
+      }
+      
+      
+      
 
     </script>
 
