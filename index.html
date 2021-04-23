@@ -11,7 +11,11 @@
       <input type="text" id="device_id" name="device_id"/><br><br>
       <button id="get_data_button" style="display: block;">Get Data</button>
     </div>
-    
+    <br>
+    <div>
+      <! -- Live Update text here - maybe add a table here or something-->
+      <label for="current_temp" style="font-size:125%;">Current Temperature: <b id="current_temp">No Temperature Readings</b></label>
+    </div>
     <pre id="content" style="white-space: pre-wrap;"></pre>
 
     <script type="text/javascript">
@@ -28,7 +32,9 @@
       var SCOPES = "https://www.googleapis.com/auth/spreadsheets.readonly";
 
       var globalIndex;
+      
       var getDataButton = document.getElementById('get_data_button');
+      var tempText = document.getElementById('current_temp');
       var devId = document.getElementById('device_id');
       
       var KEYWORD = 'MEATBOIZ';
@@ -97,6 +103,7 @@
                   for (j = 0; j < splits.length; j++) {
                     appendPre(time + '\t    ' + (parseInt(row[4])+1) + '\t    ' + splits[j] + '\u00B0F');
                   }
+                  tempText.innerHTML = splits[splits.length-1] + '\u00B0F';
                 }
               }
             }
