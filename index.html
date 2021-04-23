@@ -1,18 +1,12 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Google Sheets API Quickstart</title>
+    <title>Remote Meat Thermometer</title>
     <meta charset="utf-8" />
   </head>
   <body>
-    <p>Google Sheets API Quickstart</p>
-
-    <!--Add buttons to initiate auth sequence and sign out-->
-    <button id="authorize_button" style="display: none;">Authorize</button>
-    <button id="signout_button" style="display: none;">Sign Out</button>
-    
+    <h1>Remote Meat Thermometer</h1>
     <div>
-      <br><br>
       <label for="device_id">Device Id:</label>
       <input type="text" id="device_id" name="device_id"/><br><br>
       <button id="get_data_button" style="display: block;">Get Data</button>
@@ -22,8 +16,9 @@
 
     <script type="text/javascript">
       // Client ID and API key from the Developer Console
-      var CLIENT_ID = '836511754688-3ln8v9gikdajcevtlplrvusd4f8rgojf.apps.googleusercontent.com';
-      var API_KEY = 'AIzaSyDXTTIK43E2CK_TCMG2CW0gMqNI5Wi9BaY';
+      var setToUse = 0; // client ID and api key to use
+      var CLIENT_ID = ['836511754688-3ln8v9gikdajcevtlplrvusd4f8rgojf.apps.googleusercontent.com', '836511754688-s8sui2mghvnqcrfsrh1os81qru99aaij.apps.googleusercontent.com'];
+      var API_KEY = ['AIzaSyDXTTIK43E2CK_TCMG2CW0gMqNI5Wi9BaY','AIzaSyDXTTIK43E2CK_TCMG2CW0gMqNI5Wi9BaY'];
 
       // Array of API discovery doc URLs for APIs used by the quickstart
       var DISCOVERY_DOCS = ["https://sheets.googleapis.com/$discovery/rest?version=v4"];
@@ -32,8 +27,7 @@
       // included, separated by spaces.
       var SCOPES = "https://www.googleapis.com/auth/spreadsheets.readonly";
 
-      var authorizeButton = document.getElementById('authorize_button');
-      var signoutButton = document.getElementById('signout_button');
+      var globalIndex;
       var getDataButton = document.getElementById('get_data_button');
       var devId = document.getElementById('device_id');
       
@@ -52,51 +46,16 @@
        */
       function initClient() {
         gapi.client.init({
-          apiKey: API_KEY,
-          clientId: CLIENT_ID,
+          apiKey: API_KEY[setToUse],
+          clientId: CLIENT_ID[setToUse],
           discoveryDocs: DISCOVERY_DOCS,
           scope: SCOPES
         }).then(function () {
-          // Listen for sign-in state changes.
-          gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
-
           // Handle the initial sign-in state.
-          updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-          authorizeButton.onclick = handleAuthClick;
-          signoutButton.onclick = handleSignoutClick;
           getDataButton.onclick = getDataClick;
         }, function(error) {
           appendPre(JSON.stringify(error, null, 2));
         });
-      }
-
-      /**
-       *  Called when the signed in status changes, to update the UI
-       *  appropriately. After a sign-in, the API is called.
-       */
-      function updateSigninStatus(isSignedIn) {
-        if (isSignedIn) {
-          authorizeButton.style.display = 'none';
-          signoutButton.style.display = 'block';
-          //listMajors();
-        } else {
-          authorizeButton.style.display = 'block';
-          signoutButton.style.display = 'none';
-        }
-      }
-
-      /**
-       *  Sign in the user upon button click.
-       */
-      function handleAuthClick(event) {
-        gapi.auth2.getAuthInstance().signIn();
-      }
-
-      /**
-       *  Sign out the user upon button click.
-       */
-      function handleSignoutClick(event) {
-        gapi.auth2.getAuthInstance().signOut();
       }
 
       /**
@@ -112,10 +71,9 @@
       }
 
       /**
-       * Print the names and majors of students in a sample spreadsheet:
-       * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
+       * Print out the data in the spreadsheet for device ID
        */
-      function displayData(deviceId) {//listMajors() {
+      function displayData(deviceId) {
         gapi.client.sheets.spreadsheets.values.get({
           spreadsheetId: '1n4ctXvS9VYI_EXanxssVZGhcJiIDX0HC2JgFtHrDAyM',
           range: 'Sheet1!A1:E2000',
@@ -201,10 +159,6 @@
         }
         return indices; // found an index to reset at. Only data after this point
       }
-      
-      
-      
-
     </script>
 
     <script async defer src="https://apis.google.com/js/api.js"
