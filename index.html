@@ -159,9 +159,10 @@
         }
         
         // getting the various arrays
-        var time = values.map(x => x[0]).map( function(value) {
+        var time = values.map(x => x[0]);
+        time = time.map( function(value) {
               var splits = value.split(" ");
-              value = splits[splits.length-1];
+              return splits[splits.length-1];
         }); // should now be converted out of this//still in format "April 17, 2021 at 01:44PM"
         var probeIds = values.map(x => x[4]);
         dataFields = values.map(x => x[2]);
