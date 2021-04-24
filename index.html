@@ -20,7 +20,7 @@
 
     <script type="text/javascript">
       // Client ID and API key from the Developer Console
-      var setToUse = 0; // client ID and api key to use
+      var setToUse = 1; // client ID and api key to use
       var CLIENT_ID = ['836511754688-3ln8v9gikdajcevtlplrvusd4f8rgojf.apps.googleusercontent.com', '836511754688-s8sui2mghvnqcrfsrh1os81qru99aaij.apps.googleusercontent.com'];
       var API_KEY = ['AIzaSyDXTTIK43E2CK_TCMG2CW0gMqNI5Wi9BaY','AIzaSyDXTTIK43E2CK_TCMG2CW0gMqNI5Wi9BaY'];
 
@@ -63,6 +63,21 @@
           appendPre(JSON.stringify(error, null, 2));
         });
       }
+      
+      function getDataClick() {
+        clearData();
+        if(isNaN(parseInt(devId.value)))
+          appendPre('No Device ID provided');
+        else
+          displayData(devId.value);
+      }
+
+      function clearData() {
+        var pre = document.getElementById('content');
+        while(pre.firstChild) {
+          pre.removeChild(pre.firstChild);
+        }
+      }
 
       /**
        * Append a pre element to the body containing the given message
@@ -87,84 +102,94 @@
           var range = response.result;
           if (range.values.length > 0) {
           
-            var indices = filterIndices(range.values, KEYWORD, deviceId); //todo add probe ID into this as well?
+            var data = handleSheetResponse(response.result.values, KEYWORD, deviceId);
             
-            if (0 != indices.length) {
+            if (0 != data.length) {
               appendPre('Time\t  Probe\t  Temperature\t');
-              for (i = 0; i < indices.length; i++) {
-                var row = range.values[indices[i]];
-                
-                if( ( !isNaN(parseInt(row[4])+1) ) && ( row[3] == deviceId ) ) {
-                  var splits = row[0].split(" ");
-                  var time = splits[splits.length-1];
-                  
-                  splits = row[2].split(",");
-                  // Print columns A and E, which correspond to indices 0 and 4.
-                  for (j = 0; j < splits.length; j++) {
-                    appendPre(time + '\t    ' + (parseInt(row[4])+1) + '\t    ' + splits[j] + '\u00B0F');
-                  }
-                  tempText.innerHTML = splits[splits.length-1] + '\u00B0F';
-                }
+              for (i = 0; i<data.length; i++) {
+                appendPre(data[i][0] + '\t    ' + (parseInt(data[i][1])+1) + '\t    ' + data[i][2] + '\u00B0F');
               }
+              tempText.innerHTML = data[data.length-1][2] + '\u00B0F';
             }
             else {
               appendPre('No data with that Device ID found.');
+              tempText.innerHTML = 'No Temperature Readings';
             }
           } else {
             appendPre('No data found.');
+            tempText.innerHTML = 'No Temperature Readings';
           }
         }, function(response) {
           appendPre('Error: ' + response.result.error.message);
+          tempText.innerHTML = 'No Temperature Readings';
         });
       }
       
-      function getDataClick() {
-        clearData();
-        if(isNaN(parseInt(devId.value)))
-          appendPre('No Device ID provided');
-        else
-          displayData(devId.value);
-      }
-
-      function clearData() {
-        var pre = document.getElementById('content');
-        while(pre.firstChild) {
-          pre.removeChild(pre.firstChild);
-        }
-      }
-      
-      function filterIndices(values, resetWord, deviceId) {
+      /*
+        Creates a data array from the full set of information pulled from the spreadsheet
+        
+        values: values recieved from the sheet
+        resetWord: starting word for current data
+        deviceId: id of device to get data from
+        
+        returns: data array sorted as [time, probeId, data point (singular)]
+      */
+      function handleSheetResponse(values, resetWord, deviceId) {
+        // find the indices of the correct deviceId
         var deviceIds = values.map(x => x[3]);
-        var dataFields = values.map(x => x[2]);
+        var indices = findIndices(deviceIds, deviceId);
+        if (0 == indices.length) { // no deviceId found
+          globalIndex = -1;
+          return [];
+        }
+        else
+          globalIndex = indices[indices.length-1];
         
-        var indices = findIndices(deviceIds, deviceId); // finds the indices with the correct deviceId
-        if (0 == indices.length)
-          return indices;
-        
-        dataFields = dataFields.filter( function(value, index) { // formats dataFields to be only combrised of data with the correct deviceId
+        // formats values to be only combrised of data with the correct deviceId
+        values = values.filter( function(value, index) { 
               return indices.indexOf(index) != -1;
         });
+        var dataFields = values.map(x => x[2]);
         
-        var index = dataFields.indexOf(resetWord);
-        var savedIndex = indices[0];
-        if (-1 == index) {
-          return indices; //reset not found
+        // look for resetWords
+        indices = findIndices(dataFields, resetWord);
+        if (0 != indices.length) {
+          // found an index to reset at. Only data after this point
+          values = values.splice(indices[indices.length-1] + 1);
         }
-        while(index != -1) {
-          savedIndex = index;
-          index = dataFields.indexOf(resetWord, index+1);
+        
+        // getting the various arrays
+        var time = values.map(x => x[0]).map( function(value) {
+              var splits = value.split(" ");
+              value = splits[splits.length-1];
+        }); // should now be converted out of this//still in format "April 17, 2021 at 01:44PM"
+        var probeIds = values.map(x => x[4]);
+        dataFields = values.map(x => x[2]);
+        
+        // create the final data array
+        var data = [];
+        for (i=0; i<dataFields.length; i++) {
+          // skip any with a NaN probeId
+          if( !isNaN(parseInt(probeIds[i])+1) ) {
+            // split up the datafield into individual data units
+            var splits = dataFields[i].split(",");
+            for (j=0; j<splits.length; j++) {
+              data.push([time[i], probeIds[i], splits[j]]);
+            }
+          }
         }
-        return indices.splice(savedIndex+1, indices.length - savedIndex-1); // found an index to reset at. Only data after this point
+        return data;
       }
       
       function findIndices(values, match) {
+        // creates a list of indices in values where x = match
         var indices = [];
         var index = values.indexOf(match);
         while(index != -1) {
           indices.push(index);
           index = values.indexOf(match, index+1);
         }
-        return indices; // found an index to reset at. Only data after this point
+        return indices;
       }
     </script>
 
