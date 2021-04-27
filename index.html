@@ -68,6 +68,7 @@
         }).then(function () {
           // Handle the initial sign-in state.
           getDataButton.onclick = getDataClick;
+          displayData(devId.value);
         }, function(error) {
           appendPre(JSON.stringify(error, null, 2));
         });
@@ -78,6 +79,10 @@
         if(isNaN(parseInt(devId.value)))
           appendPre('No Device ID provided');
         else
+          tempText1.innerHTML = 'No Temperature Readings';
+          tempText2.innerHTML = 'No Temperature Readings';
+          tempText3.innerHTML = 'No Temperature Readings';
+          tempText4.innerHTML = 'No Temperature Readings';
           displayData(devId.value);
       }
 
