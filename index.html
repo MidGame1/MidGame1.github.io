@@ -68,9 +68,6 @@
         }).then(function () {
           // Handle the initial sign-in state.
           getDataButton.onclick = getDataClick;
-          setInterval(function(){ //should update page every 2 seconds
-            getDataClick;
-          }, 2000);
         }, function(error) {
           appendPre(JSON.stringify(error, null, 2));
         });
@@ -86,6 +83,8 @@
           tempText3.innerHTML = 'No Temperature Readings';
           tempText4.innerHTML = 'No Temperature Readings';
           displayData(devId.value);
+
+          setTimeout(getDataClick, 4000);
       }
 
       function clearData() {
@@ -125,16 +124,16 @@
               for (i = 0; i<data.length; i++) {
                 appendPre(data[i][0] + '\t    ' + (parseInt(data[i][1])+1) + '\t    ' + data[i][2] + '\u00B0F');
                 if ((parseInt(data[i][1])+1) == 1){
-                  tempText1.innerHTML = (parseFloat(data[i][2])+1) + '\u00B0F';
+                  tempText1.innerHTML = (parseFloat(data[i][2])) + '\u00B0F';
                 }
                 else if ((parseInt(data[i][1])+1) == 2){
-                  tempText2.innerHTML = (parseFloat(data[i][2])+1) + '\u00B0F';
+                  tempText2.innerHTML = (parseFloat(data[i][2])) + '\u00B0F';
                 }
                 else if ((parseInt(data[i][1])+1) == 3){
-                  tempText3.innerHTML = (parseFloat(data[i][2])+1) + '\u00B0F';
+                  tempText3.innerHTML = (parseFloat(data[i][2])) + '\u00B0F';
                 }
                 else if ((parseInt(data[i][1])+1) == 4){
-                  tempText4.innerHTML = (parseFloat(data[i][2])+1) + '\u00B0F';
+                  tempText4.innerHTML = (parseFloat(data[i][2])) + '\u00B0F';
                 }
               }
             }
