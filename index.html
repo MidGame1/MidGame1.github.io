@@ -84,7 +84,16 @@
           tempText4.innerHTML = 'No Temperature Readings';
           displayData(devId.value);
 
-          setTimeout(getDataClick, 4000);
+          dataRefresh;
+      }
+
+      function dataRefresh() {
+        if(isNaN(parseInt(devId.value)))
+          appendPre('No Device ID provided');
+        else
+          displayData(devId.value);
+
+          setTimeout(dataRefresh, 5000);
       }
 
       function clearData() {
