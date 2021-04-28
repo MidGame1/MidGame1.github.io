@@ -68,7 +68,9 @@
         }).then(function () {
           // Handle the initial sign-in state.
           getDataButton.onclick = getDataClick;
-          getDataClick;
+          setInterval(function(){ //should update page every 2 seconds
+            getDataClick;
+          }, 2000);
         }, function(error) {
           appendPre(JSON.stringify(error, null, 2));
         });
