@@ -16,6 +16,7 @@
       <! -- Live Update text here - maybe add a table here or something-->
       <label for="current_temp" style="font-size:125%;">Current Temperature: <b id="current_temp">No Temperature Readings</b></label>
     </div>
+    <div id="chartDiv" style="width:50%; height:300px; margin:0 auto;"></div>
     <pre id="content" style="white-space: pre-wrap;"></pre>
 
     <script type="text/javascript">
@@ -173,4 +174,6 @@
       onreadystatechange="if (this.readyState === 'complete') this.onload()">
     </script>
   </body>
+  <script src="https://code.jscharting.com/2.9.0/jscharting.js"></script>
+  <script src="js/index.js"></script>
 </html>
