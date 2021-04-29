@@ -10,7 +10,8 @@
       <label for="device_id">Device Id:</label>
       <input type="text" id="device_id" name="device_id"/><br><br>
       <button id="get_data_button" style="display: block;">Get Data</button>
-    </div>
+	  <pre id="error_msg" style="white-space: pre-wrap;"></pre>
+	</div>
     <br>
     <div>
       <! -- Live Update text here - maybe add a table here or something-->
@@ -40,6 +41,7 @@
       var globalIndex;
 
       var getDataButton = document.getElementById('get_data_button');
+	  var errorMsg = document.getElementById('error_msg');
       var tempText1 = document.getElementById('current_temp1');
       var tempText2 = document.getElementById('current_temp2');
       var tempText3 = document.getElementById('current_temp3');
@@ -69,14 +71,14 @@
           // Handle the initial sign-in state.
           getDataButton.onclick = getDataClick;
         }, function(error) {
-          appendPre(JSON.stringify(error, null, 2));
+          errorMsg.innerHTML = JSON.stringify(error, null, 2);
         });
       }
 
       function getDataClick() {
         clearData();
         if(isNaN(parseInt(devId.value)))
-          appendPre('No Device ID provided');
+          errorMsg.innerHTML = 'No Device ID provided';
         else
           tempText1.innerHTML = 'No Temperature Readings';
           tempText2.innerHTML = 'No Temperature Readings';
@@ -89,7 +91,7 @@
 
       function dataRefresh() {
         if(isNaN(parseInt(devId.value)))
-          appendPre('No Device ID provided');
+          errorMsg.innerHTML = 'No Device ID provided';
         else
           displayData(devId.value);
 
@@ -147,21 +149,21 @@
               }
             }
             else {
-              //appendPre('No data with that Device ID found.'); This line might just repeat what line 80 says
+              errorMsg.innerHTML = 'No data with that Device ID found.'; This line might just repeat what line 80 says
               tempText1.innerHTML = 'No Temperature Readings';
               tempText2.innerHTML = 'No Temperature Readings';
               tempText3.innerHTML = 'No Temperature Readings';
               tempText4.innerHTML = 'No Temperature Readings';
             }
           } else {
-            appendPre('No data found.');
+            errorMsg.innerHTML = 'No data found.';
             tempText1.innerHTML = 'No Temperature Readings';
             tempText2.innerHTML = 'No Temperature Readings';
             tempText3.innerHTML = 'No Temperature Readings';
             tempText4.innerHTML = 'No Temperature Readings';
           }
         }, function(response) {
-          appendPre('Error: ' + response.result.error.message);
+          errorMsg.innerHTML = 'Error: ' + response.result.error.message;
           tempText1.innerHTML = 'No Temperature Readings';
           tempText2.innerHTML = 'No Temperature Readings';
           tempText3.innerHTML = 'No Temperature Readings';
