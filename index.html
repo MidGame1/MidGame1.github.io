@@ -3,6 +3,8 @@
   <head>
     <title>Remote Meat Thermometer</title>
     <meta charset="utf-8" />
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   </head>
   <body>
     <h1>Remote Meat Thermometer</h1>
@@ -10,7 +12,8 @@
       <label for="device_id">Device Id:</label>
       <input type="text" id="device_id" name="device_id"/><br><br>
       <button id="get_data_button" style="display: block;">Get Data</button>
-    </div>
+	  <pre id="error_msg" style="white-space: pre-wrap;"></pre>
+	</div>
     <br>
     <div>
       <! -- Live Update text here - maybe add a table here or something-->
@@ -22,7 +25,8 @@
       <br>
       <label for="current_temp4" style="font-size:125%;">Current Temperature of Probe 4: <b id="current_temp4">No Temperature Readings</b></label>
     </div>
-    <pre id="content" style="white-space: pre-wrap;"></pre>
+    <canvas id="myChart" width="600" height="400"></canvas>
+	<pre id="content" style="white-space: pre-wrap;"></pre>
 
     <script type="text/javascript">
       // Client ID and API key from the Developer Console
@@ -38,8 +42,14 @@
       var SCOPES = "https://www.googleapis.com/auth/spreadsheets.readonly";
 
       var globalIndex;
+	  
+	  var temperatureIndex = 0;
+	  var temperature_array = [];
+	  var time_array = [];
+	  var data = [];
 
       var getDataButton = document.getElementById('get_data_button');
+	  var errorMsg = document.getElementById('error_msg');
       var tempText1 = document.getElementById('current_temp1');
       var tempText2 = document.getElementById('current_temp2');
       var tempText3 = document.getElementById('current_temp3');
@@ -69,14 +79,14 @@
           // Handle the initial sign-in state.
           getDataButton.onclick = getDataClick;
         }, function(error) {
-          appendPre(JSON.stringify(error, null, 2));
+          errorMsg.innerHTML = JSON.stringify(error, null, 2);
         });
       }
 
       function getDataClick() {
         clearData();
         if(isNaN(parseInt(devId.value)))
-          appendPre('No Device ID provided');
+          errorMsg.innerHTML = 'No Device ID provided';
         else
           tempText1.innerHTML = 'No Temperature Readings';
           tempText2.innerHTML = 'No Temperature Readings';
@@ -84,16 +94,16 @@
           tempText4.innerHTML = 'No Temperature Readings';
           displayData(devId.value);
 
-          setTimeout(dataRefresh, 45000);
+          setTimeout(dataRefresh, 10000);
       }
 
       function dataRefresh() {
         if(isNaN(parseInt(devId.value)))
-          appendPre('No Device ID provided');
+          errorMsg.innerHTML = 'No Device ID provided';
         else
           displayData(devId.value);
 
-          setTimeout(dataRefresh, 45000);
+          setTimeout(dataRefresh, 10000);
       }
 
       function clearData() {
@@ -102,6 +112,87 @@
           pre.removeChild(pre.firstChild);
         }
       }
+
+	  //Start Graphing
+	window.addEventListener('load', setup);
+
+	async function setup() {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const dataTemps = await dataRefresh();
+        const myChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            //labels:
+            datasets: [
+              {
+                label: 'Probe 1 Temperature °C',
+                data: data[0], 
+                fill: false,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                borderWidth: 1
+              },
+              {
+                label: 'Probe 2 Temperature °C',
+                data: data[1],
+                fill: false,
+                borderColor: 'rgba(99, 132, 255, 1)',
+                backgroundColor: 'rgba(99, 132, 255, 0.5)',
+                borderWidth: 1
+              },
+              {
+                label: 'Probe 3 Temperature °C',
+                data: data[2],
+                fill: false,
+                borderColor: 'rgba(99, 255, 132, 1)',
+                backgroundColor: 'rgba(99, 255, 132, 0.5)',
+                borderWidth: 1
+              },
+               {
+                label: 'Probe 4 Temperature °C',
+                data: data[3],
+                fill: false,
+                borderColor: 'rgba(255, 190, 0, 1)',
+                backgroundColor: 'rgba(255, 190, 0, 0.5)',
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+			  title: {
+				 display: true,
+				 text: 'Probe Temperatures'
+			   },
+			   scales: {
+				 xAxes: [{
+				   type: 'linear',
+				   position: 'top',
+				   gridLines: {
+					 zeroLineColor: "rgba(0,255,0,1)"
+				   },
+				   scaleLabel: {
+					 display: true,
+					 labelString: 'Time' //x axis
+				   }
+				 }],
+				 yAxes: [{
+				   type: 'linear',
+				   position: 'right',
+				   gridLines: {
+					 zeroLineColor: "rgba(0,255,0,1)"
+				   },
+				   scaleLabel: {
+					 display: true,
+					 labelString: 'Temperature' //y axis
+				   }
+				 }] //yaxes
+			   } //scales
+		 } //options
+
+        });
+      }
+
+	  //End Graphing
 
       /**
        * Append a pre element to the body containing the given message
@@ -147,21 +238,21 @@
               }
             }
             else {
-              //appendPre('No data with that Device ID found.'); This line might just repeat what line 80 says
+              errorMsg.innerHTML = 'No data with that Device ID found.'; This line might just repeat what line 80 says
               tempText1.innerHTML = 'No Temperature Readings';
               tempText2.innerHTML = 'No Temperature Readings';
               tempText3.innerHTML = 'No Temperature Readings';
               tempText4.innerHTML = 'No Temperature Readings';
             }
           } else {
-            appendPre('No data found.');
+            errorMsg.innerHTML = 'No data found.';
             tempText1.innerHTML = 'No Temperature Readings';
             tempText2.innerHTML = 'No Temperature Readings';
             tempText3.innerHTML = 'No Temperature Readings';
             tempText4.innerHTML = 'No Temperature Readings';
           }
         }, function(response) {
-          appendPre('Error: ' + response.result.error.message);
+          errorMsg.innerHTML = 'Error: ' + response.result.error.message;
           tempText1.innerHTML = 'No Temperature Readings';
           tempText2.innerHTML = 'No Temperature Readings';
           tempText3.innerHTML = 'No Temperature Readings';
@@ -217,12 +308,17 @@
             // split up the datafield into individual data units
             var splits = dataFields[i].split(",");
             for (j=0; j<splits.length; j++) {
-              data.push([time[i], probeIds[i], splits[j]]);
-            }
-          }
-        }
+			  if (j==0) {
+					temperatureIndex[j] = temperatureIndex[j-1] + 1; } //For graphing, use temperatureIndex instead of time[i] for even spacing.
+			  else {
+					temperatuerIndex[j] = temperatureIndex[j-1] +1; //For graphing, use temperatureIndex instead of time[i] for even spacing.
+					data.push([time[i], probeIds[i], splits [j]]);
+			  } // else
+			} // for loop
+          } // if test
+        } // outer for loop
         return data;
-      }
+      } //close function
 
       function findIndices(values, match) {
         // creates a list of indices in values where x = match
