@@ -133,18 +133,18 @@
             if (0 != data.length) {
               appendPre('Time\t  Probe\t  Temperature\t');
               for (i = 0; i<data.length; i++) {
-                appendPre(data[i][0] + '\t    ' + (parseInt(data[i][1])+1) + '\t    ' + data[i][2] + '\u00B0F');
-                if ((parseInt(data[i][1])+1) == 1){
-                  tempText1.innerHTML = (parseFloat(data[i][2])) + '\u00B0F';
+                appendPre(data[i][0] + '\t    ' + data[i][1] + '\t    ' + data[i][2] + '\u00B0F');
+                if (data[i][1] == 1){
+                  tempText1.innerHTML = data[i][2] + '\u00B0F';
                 }
-                else if ((parseInt(data[i][1])+1) == 2){
-                  tempText2.innerHTML = (parseFloat(data[i][2])) + '\u00B0F';
+                else if (data[i][1] == 2){
+                  tempText2.innerHTML = data[i][2] + '\u00B0F';
                 }
-                else if ((parseInt(data[i][1])+1) == 3){
-                  tempText3.innerHTML = (parseFloat(data[i][2])) + '\u00B0F';
+                else if (data[i][1] == 3){
+                  tempText3.innerHTML = data[i][2] + '\u00B0F';
                 }
-                else if ((parseInt(data[i][1])+1) == 4){
-                  tempText4.innerHTML = (parseFloat(data[i][2])) + '\u00B0F';
+                else if (data[i][1] == 4){
+                  tempText4.innerHTML = data[i][2] + '\u00B0F';
                 }
               }
             }
@@ -219,7 +219,7 @@
             // split up the datafield into individual data units
             var splits = dataFields[i].split(",");
             for (j=0; j<splits.length; j++) {
-              data.push([time[i], probeIds[i], splits[j]]);
+              data.push([time[i], (parseInt(probeIds[i]) + 1), parseFloat(splits[j])]);
             }
           }
         }
