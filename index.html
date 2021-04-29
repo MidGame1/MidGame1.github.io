@@ -3,6 +3,8 @@
   <head>
     <title>Remote Meat Thermometer</title>
     <meta charset="utf-8" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script> 
   </head>
   <body>
     <h1>Remote Meat Thermometer</h1>
@@ -22,11 +24,13 @@
       <br>
       <label for="current_temp4" style="font-size:125%;">Current Temperature of Probe 4: <b id="current_temp4">No Temperature Readings</b></label>
     </div>
+    <canvas id="myChart" width="600" height="400"></canvas>
+    
     <pre id="content" style="white-space: pre-wrap;"></pre>
 
     <script type="text/javascript">
       // Client ID and API key from the Developer Console
-      var setToUse = 0; // client ID and api key to use
+      var setToUse = 1; // client ID and api key to use
       var CLIENT_ID = ['836511754688-3ln8v9gikdajcevtlplrvusd4f8rgojf.apps.googleusercontent.com', '836511754688-s8sui2mghvnqcrfsrh1os81qru99aaij.apps.googleusercontent.com'];
       var API_KEY = ['AIzaSyDXTTIK43E2CK_TCMG2CW0gMqNI5Wi9BaY','AIzaSyDXTTIK43E2CK_TCMG2CW0gMqNI5Wi9BaY'];
 
@@ -38,7 +42,10 @@
       var SCOPES = "https://www.googleapis.com/auth/spreadsheets.readonly";
 
       var globalIndex;
-
+      var temperatureIndex = 0; 
+      var temperature_array = [];
+      var time_array = []; // Could need to be deleted if not used
+      var data = [];
       var getDataButton = document.getElementById('get_data_button');
       var tempText1 = document.getElementById('current_temp1');
       var tempText2 = document.getElementById('current_temp2');
@@ -84,7 +91,7 @@
           tempText4.innerHTML = 'No Temperature Readings';
           displayData(devId.value);
 
-          setTimeout(dataRefresh, 45000);
+          setTimeout(dataRefresh, 5000);
       }
 
       function dataRefresh() {
@@ -93,7 +100,7 @@
         else
           displayData(devId.value);
 
-          setTimeout(dataRefresh, 45000);
+          setTimeout(dataRefresh, 5000);
       }
 
       function clearData() {
@@ -115,6 +122,88 @@
         pre.appendChild(textContent);
       }
 
+	//Start Graphing
+	window.addEventListener('load', setup);
+	
+	async function setup() {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const dataTemps = await dataRefresh();
+        const myChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            //labels:
+            datasets: [
+              {
+                label: 'Probe 1 Temperature °C',
+                data: data[0], 
+                fill: false,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                borderWidth: 1
+              },
+              {
+                label: 'Probe 2 Temperature °C',
+                data: data[1],
+                fill: false,
+                borderColor: 'rgba(99, 132, 255, 1)',
+                backgroundColor: 'rgba(99, 132, 255, 0.5)',
+                borderWidth: 1
+              },
+              {
+                label: 'Probe 3 Temperature °C',
+                data: data[2],
+                fill: false,
+                borderColor: 'rgba(99, 255, 132, 1)',
+                backgroundColor: 'rgba(99, 255, 132, 0.5)',
+                borderWidth: 1
+              },
+               {
+                label: 'Probe 4 Temperature °C',
+                data: data[3],
+                fill: false,
+                borderColor: 'rgba(255, 190, 0, 1)',
+                backgroundColor: 'rgba(255, 190, 0, 0.5)',
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+			  title: {
+				 display: true,
+				 text: 'Probe Temperatures'
+			   },
+			   scales: {
+				 xAxes: [{
+				   type: 'linear',
+				   position: 'top',
+				   gridLines: {
+					 zeroLineColor: "rgba(0,255,0,1)"
+				   },
+				   scaleLabel: {
+					 display: true,
+					 labelString: 'Time' //x axis
+				   }
+				 }],
+				 yAxes: [{
+				   type: 'linear',
+				   position: 'right',
+				   gridLines: {
+					 zeroLineColor: "rgba(0,255,0,1)"
+				   },
+				   scaleLabel: {
+					 display: true,
+					 labelString: 'Temperature' //y axis
+				   }
+				 }] //yaxes
+			   } //scales
+		 } //options
+     
+        });
+      }
+	
+	//End Graphing
+
+
       /**
        * Print out the data in the spreadsheet for device ID
        */
@@ -126,7 +215,7 @@
           var range = response.result;
           if (range.values.length > 0) {
 
-            var data = handleSheetResponse(response.result.values, KEYWORD, deviceId);
+            data = handleSheetResponse(response.result.values, KEYWORD, deviceId);
 
             if (0 != data.length) {
               appendPre('Time\t  Probe\t  Temperature\t');
@@ -134,6 +223,7 @@
                 appendPre(data[i][0] + '\t    ' + (parseInt(data[i][1])+1) + '\t    ' + data[i][2] + '\u00B0F');
                 if ((parseInt(data[i][1])+1) == 1){
                   tempText1.innerHTML = (parseFloat(data[i][2])) + '\u00B0F';
+                 // temperature_array.push(data[i][2])
                 }
                 else if ((parseInt(data[i][1])+1) == 2){
                   tempText2.innerHTML = (parseFloat(data[i][2])) + '\u00B0F';
@@ -217,12 +307,17 @@
             // split up the datafield into individual data units
             var splits = dataFields[i].split(",");
             for (j=0; j<splits.length; j++) {
-              data.push([time[i], probeIds[i], splits[j]]);
-            }
-          }
-        }
+				if (j==0) {
+					temperatureIndex[j] = temperatureIndex[j-1] + 1; } // For graphing, use temperatureIndex instead of time[i] for even spacing.
+				else {
+					temperatureIndex[j] = temperatureIndex[j-1] + 1; // For graphing, use temperatureIndex instead of time[i] for even spacing.
+					data.push([time[i], probeIds[i], splits[j]]);
+				} // else
+            }    //for loop
+          } //if test
+        } //outer for loop
         return data;
-      }
+      } //close function
 
       function findIndices(values, match) {
         // creates a list of indices in values where x = match
@@ -240,5 +335,7 @@
       onload="this.onload=function(){};handleClientLoad()"
       onreadystatechange="if (this.readyState === 'complete') this.onload()">
     </script>
+ 
+</script>
   </body>
-</html>
+</html> 
