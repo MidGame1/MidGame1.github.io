@@ -311,7 +311,7 @@
 			  if (j==0) {
 					temperatureIndex[j] = temperatureIndex[j-1] + 1; } //For graphing, use temperatureIndex instead of time[i] for even spacing.
 			  else {
-					temperatuerIndex[j] = temperatureIndex[j-1] + 1; //For graphing, use temperatureIndex instead of time[i] for even spacing.
+					temperatureIndex[j] = temperatureIndex[j-1] + 1; //For graphing, use temperatureIndex instead of time[i] for even spacing.
 					data.push([time[i], (parseInt(probeIds[i]) + 1), parseFloats(splits [j])]);
 			  } // else
 			} // for loop
