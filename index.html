@@ -49,7 +49,7 @@
 	  var temperature_array3 = [];
 	  var temperature_array4 = [];
 	  var count = 0;
-	  var _auth2
+	  var _auth2;
 	  
       var getDataButton = document.getElementById('get_data_button');
 	  var errorMsg = document.getElementById('error_msg');
@@ -95,7 +95,7 @@
           tempText2.innerHTML = 'No Temperature Readings';
           tempText3.innerHTML = 'No Temperature Readings';
           tempText4.innerHTML = 'No Temperature Readings';
-          displayData(devId);
+          displayData(devId.value);
 
           setTimeout(dataRefresh, 10000);
       }
@@ -215,11 +215,10 @@
        * Print out the data in the spreadsheet for device ID
        */
       async function displayData(deviceId) {
-		const params = {
+        gapi.client.sheets.spreadsheets.values.get({
           spreadsheetId: '1n4ctXvS9VYI_EXanxssVZGhcJiIDX0HC2JgFtHrDAyM',
-          range: 'Sheet1!A1:E2000' };
-        var request = await gapi.client.sheets.spreadsheets.values.get(params);
-	    request.then(function(response) {
+          range: 'Sheet1!A1:E2000',
+        }).then(function(response) {
           var range = response.result;
           if (range.values.length > 0) {
 
@@ -340,5 +339,8 @@
     </script>
 
     <script async defer src="https://apis.google.com/js/api.js"
+      onload="this.onload=function(){};handleClientLoad()"
+      onreadystatechange="if (this.readyState === 'complete') this.onload()">
+    </script>
   </body>
 </html>
