@@ -134,6 +134,7 @@
             if (0 != data.length) {
               errorMsg.innerHTML = ''; // no error
               // appendPre('Time\t  Probe\t  Temperature\t');
+              console.log('Getting new data now');
               for (i = 0; i<data.length; i++) {
                 // appendPre(data[i][0] + '\t    ' + data[i][1] + '\t    ' + data[i][2] + '\u00B0F');
                 if (data[i][1] == 1){
